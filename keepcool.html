@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Keepcool Le Pian-Médoc</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0f;color:#f0f0f0;font-family:system-ui,-apple-system,sans-serif;padding-bottom:80px;min-height:100vh}
+::-webkit-scrollbar{width:0}
+button{border:none;cursor:pointer;font-family:inherit}
+input{font-family:inherit;color:#f0f0f0}
+.header{background:rgba(0,0,0,0.92);border-bottom:1px solid rgba(255,255,255,0.08);padding:14px 16px;position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center}
+.logo-title{font-size:18px;font-weight:900;letter-spacing:3px;color:#FF6B35}
+.logo-sub{font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:2px}
+.nav-btn{padding:7px 12px;border-radius:20px;font-size:16px;transition:all 0.2s}
+.nav-btn.active{background:#FF6B35;color:#0a0a0f}
+.nav-btn:not(.active){background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6)}
+.view{padding:20px 16px;display:none}
+.view.active{display:block}
+.pbar{height:6px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden}
+.pbar-fill{height:100%;border-radius:4px;transition:width 0.5s}
+.week-box{background:linear-gradient(135deg,rgba(255,107,53,0.12),rgba(78,205,196,0.12));border:1px solid rgba(255,107,53,0.3);border-radius:20px;padding:18px;margin-bottom:18px}
+.mini-cal{display:flex;gap:5px;margin-bottom:18px}
+.cal-day{flex:1;aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.cal-dot{position:absolute;top:2px;right:2px;width:5px;height:5px;border-radius:50%;background:#34D399}
+.day-selector{display:flex;gap:5px;margin-bottom:16px}
+.day-btn{flex:1;min-width:52px;padding:8px 4px;border-radius:12px;font-size:11px;font-weight:800;cursor:pointer;position:relative;text-align:center;line-height:1.4;transition:all 0.2s}
+.section-lbl{font-size:10px;font-weight:700;letter-spacing:2px;margin-bottom:8px}
+.ex-row{border-radius:12px;margin-bottom:8px;border-width:1px;border-style:solid;overflow:hidden}
+.ex-main{display:flex;align-items:center;gap:12px;padding:12px 14px}
+.cb{width:28px;height:28px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-width:2px;border-style:solid;background:transparent;cursor:pointer;transition:all 0.2s}
+.info-btn{width:30px;height:30px;border-radius:50%;font-size:15px;font-weight:900;font-style:italic;font-family:Georgia,serif;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.stretch-item{font-size:12px;color:rgba(255,255,255,0.35);padding:3px 0 3px 10px;border-left:2px solid rgba(255,255,255,0.1);margin-bottom:3px}
+.day-card{background:rgba(255,255,255,0.04);border-radius:20px;overflow:hidden;margin-bottom:14px}
+.day-hd{padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.day-bd{padding:16px 18px 18px}
+.valid-banner{background:linear-gradient(135deg,#4ECDC4,#34D399);border-radius:16px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 24px rgba(78,205,196,0.3)}
+.rest-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:24px;text-align:center}
+.stats-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:18px;margin-bottom:14px}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,15,0.97);border-top:1px solid rgba(255,255,255,0.06);display:flex;padding:10px 16px 20px;gap:6px}
+.bnav-btn{flex:1;padding:8px 4px;border-radius:12px;font-size:10px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;transition:all 0.2s;border:1px solid transparent;background:transparent;color:rgba(255,255,255,0.3)}
+.bnav-btn.active{background:rgba(255,107,53,0.15);border-color:rgba(255,107,53,0.3);color:#FF6B35}
+
+/* ── JOURNAL POIDS ── */
+.log-panel{background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,255,255,0.06);padding:12px 14px}
+.log-title{font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:8px;font-weight:700}
+.log-sets{display:flex;flex-direction:column;gap:6px}
+.log-set-row{display:flex;align-items:center;gap:8px}
+.log-set-num{font-size:11px;color:rgba(255,255,255,0.3);width:40px;flex-shrink:0}
+.log-input{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 10px;font-size:13px;width:70px;text-align:center}
+.log-input:focus{outline:none;border-color:rgba(255,255,255,0.3)}
+.log-sep{font-size:11px;color:rgba(255,255,255,0.2)}
+.log-prev{font-size:10px;color:rgba(255,255,255,0.25);margin-top:6px;padding-left:48px}
+.log-pr{font-size:10px;font-weight:700;margin-top:4px;padding-left:48px}
+
+/* ── TIMER ── */
+.timer-overlay{position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
+.timer-circle{width:200px;height:200px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.timer-svg{position:absolute;top:0;left:0;width:200px;height:200px;transform:rotate(-90deg)}
+.timer-num{font-size:56px;font-weight:900;letter-spacing:-2px}
+.timer-lbl{font-size:12px;color:rgba(255,255,255,0.4);letter-spacing:2px}
+.timer-btns{display:flex;gap:12px}
+.timer-btn{padding:14px 28px;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:1px}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.9);display:flex;align-items:flex-end;justify-content:center}
+.modal-box{background:#13131a;width:100%;max-height:92vh;overflow-y:auto;border-radius:24px 24px 0 0;animation:su 0.25s ease}
+@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-img-zone{width:100%;height:220px;background:#efefef;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.modal-img-zone img{width:100%;height:100%;object-fit:cover}
+.modal-content{padding:20px 20px 12px}
+.modal-close-bar{padding:8px 20px 24px}
+.modal-close-big{width:100%;padding:15px;border-radius:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:15px;font-weight:700;letter-spacing:1px;cursor:pointer}
+
+/* ── CALCULATEUR ── */
+.calc-box{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:18px;margin-bottom:14px}
+.calc-input-row{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.calc-input{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:10px 14px;font-size:16px;color:#f0f0f0;width:100%;text-align:center}
+.calc-input:focus{outline:none;border-color:#FF6B35}
+.calc-table{width:100%;border-collapse:collapse}
+.calc-table th{font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.calc-table td{font-size:13px;padding:8px 8px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.calc-table tr.highlight td{color:#FF6B35;font-weight:700}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div><div class="logo-title">KEEPCOOL</div><div class="logo-sub">LE PIAN-MÉDOC</div></div>
+  <div style="display:flex;gap:4px">
+    <button class="nav-btn active" onclick="showView('home')">🏠</button>
+    <button class="nav-btn" onclick="showView('program')">📋</button>
+    <button class="nav-btn" onclick="showView('calc')">🧮</button>
+    <button class="nav-btn" onclick="showView('stats')">📊</button>
+  </div>
+</div>
+
+<div id="view-home"    class="view active"></div>
+<div id="view-program" class="view">
+  <div class="day-selector" id="day-selector"></div>
+  <div id="day-card-container"></div>
+</div>
+<div id="view-calc"   class="view"></div>
+<div id="view-stats"  class="view"></div>
+
+<!-- MODAL INFO EXERCICE -->
+<div id="modal" class="overlay" style="display:none">
+  <div class="modal-box">
+    <div class="modal-img-zone" id="modal-img-zone"></div>
+    <div class="modal-content" id="modal-content"></div>
+    <div class="modal-close-bar">
+      <button class="modal-close-big" onclick="closeModal()">✕  FERMER</button>
+    </div>
+  </div>
+</div>
+
+<!-- TIMER DE REPOS -->
+<div id="timer-overlay" class="timer-overlay" style="display:none">
+  <div style="font-size:13px;color:rgba(255,255,255,0.4);letter-spacing:2px">TEMPS DE REPOS</div>
+  <div class="timer-circle" id="timer-circle">
+    <svg class="timer-svg" viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="88" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
+      <circle id="timer-arc" cx="100" cy="100" r="88" fill="none" stroke="#FF6B35" stroke-width="8"
+        stroke-dasharray="553" stroke-dashoffset="0" stroke-linecap="round"/>
+    </svg>
+    <div class="timer-num" id="timer-num">90</div>
+    <div class="timer-lbl">secondes</div>
+  </div>
+  <div style="display:flex;gap:12px">
+    <button class="timer-btn" style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.15)" onclick="addTimer(-15)">−15s</button>
+    <button class="timer-btn" style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.15)" onclick="addTimer(+15)">+15s</button>
+  </div>
+  <button class="timer-btn" style="background:#FF6B35;color:#0a0a0f;font-size:16px;padding:16px 40px" onclick="closeTimer()">✕  FERMER</button>
+</div>
+
+<div class="bottom-nav">
+  <button class="bnav-btn active" id="bnav-home"    onclick="showView('home')"><span style="font-size:18px">🏠</span>Accueil</button>
+  <button class="bnav-btn"        id="bnav-program" onclick="showView('program')"><span style="font-size:18px">📋</span>Programme</button>
+  <button class="bnav-btn"        id="bnav-calc"    onclick="showView('calc')"><span style="font-size:18px">🧮</span>Charges</button>
+  <button class="bnav-btn"        id="bnav-stats"   onclick="showView('stats')"><span style="font-size:18px">📊</span>Stats</button>
+</div>
+
+<script>
+// ── IMAGES ────────────────────────────────────────────────────────────────────
+const IMGS = {
+  "Développé couché machine":       "https://wger.de/static/images/exercises/large/21.png",
+  "Élévations latérales haltères":  "https://wger.de/static/images/exercises/large/78.png",
+  "Pec-deck butterflies":           "https://wger.de/static/images/exercises/large/23.png",
+  "Développé épaules machine":      "https://wger.de/static/images/exercises/large/79.png",
+  "Pushdown poulie haute":          "https://wger.de/static/images/exercises/large/85.png",
+  "Presse à cuisses":               "https://wger.de/static/images/exercises/large/55.png",
+  "Fentes avec haltères":           "https://wger.de/static/images/exercises/large/59.png",
+  "Leg curl allongé":               "https://wger.de/static/images/exercises/large/58.png",
+  "Leg extension":                  "https://wger.de/static/images/exercises/large/56.png",
+  "Élévations mollets debout":      "https://wger.de/static/images/exercises/large/69.png",
+  "Squat hack machine":             "https://wger.de/static/images/exercises/large/54.png",
+  "Développé incliné machine":      "https://wger.de/static/images/exercises/large/22.png",
+  "Tirage vertical prise large":    "https://wger.de/static/images/exercises/large/18.png",
+  "Rowing machine poitrine":        "https://wger.de/static/images/exercises/large/17.png",
+  "Développé épaules haltères":     "https://wger.de/static/images/exercises/large/80.png",
+  "Gainage planche":                "https://wger.de/static/images/exercises/large/314.png",
+  "Tirage vertical machine":        "https://wger.de/static/images/exercises/large/18.png",
+  "Rowing assis câble":             "https://wger.de/static/images/exercises/large/17.png",
+  "Tirage horizontal câble":        "https://wger.de/static/images/exercises/large/16.png",
+  "Curl biceps haltères":           "https://wger.de/static/images/exercises/large/88.png",
+  "Curl marteau haltères":          "https://wger.de/static/images/exercises/large/92.png",
+  "Crunchs abdos machine":          "https://wger.de/static/images/exercises/large/10.png",
+  "Burpees":                        "https://wger.de/static/images/exercises/large/364.png",
+  "Développé couché incliné":       "https://wger.de/static/images/exercises/large/22.png",
+  "Tirage nuque poulie":            "https://wger.de/static/images/exercises/large/18.png",
+  "Gainage planche longue":         "https://wger.de/static/images/exercises/large/314.png",
+  "Mountain climbers":              "https://wger.de/static/images/exercises/large/367.png",
+};
+
+// ── PROGRAMME ─────────────────────────────────────────────────────────────────
+const DAYS = [
+  { id:"lundi", label:"LUNDI", emoji:"🔥", optional:false, focus:"Pectoraux · Épaules · Triceps", color:"#FF6B35",
+    cardio:{ name:"Tapis de course ou Elliptique", duration:"10 min", detail:"Échauffement intensité modérée" },
+    exercises:[
+      { name:"Développé couché machine",      sets:3, reps:"12",     muscle:"Pectoraux",      machine:"Chest Press Machine",   tip:"Contrôle la descente sur 2 sec, pousse sans verrouiller les coudes" },
+      { name:"Élévations latérales haltères", sets:3, reps:"15",     muscle:"Épaules",        machine:"Haltères libres",        tip:"Coudes légèrement fléchis, monte jusqu'à hauteur d'épaule" },
+      { name:"Pec-deck butterflies",          sets:3, reps:"12",     muscle:"Pectoraux",      machine:"Pec-Deck Machine",       tip:"Étirement complet en position ouverte, contraction en fermant" },
+      { name:"Développé épaules machine",     sets:3, reps:"12",     muscle:"Épaules",        machine:"Shoulder Press Machine", tip:"Ne verrouille pas les coudes en haut, descente lente" },
+      { name:"Pushdown poulie haute",         sets:3, reps:"15",     muscle:"Triceps",        machine:"Cable Tower / Poulie",   tip:"Coudes collés au corps, extension complète vers le bas" },
+      { name:"Circuit Training Keepcool",     sets:1, reps:"20 min", muscle:"Full Body",      machine:"Circuit Training®",      tip:"Enchaîne sans pause, idéal pour brûler les calories" },
+    ],
+    finisher:{ name:"HIIT Rameur", duration:"8 min", detail:"30s effort max / 30s récup × 8" },
+    stretching:["Étirement pectoraux au mur (30s)","Rotation épaules (10 rép)","Triceps overhead (30s/côté)"],
+  },
+  { id:"mercredi", label:"MERCREDI", emoji:"⚡", optional:false, focus:"Cuisses · Fessiers · Mollets", color:"#4ECDC4",
+    cardio:{ name:"Vélo stationnaire ou Elliptique", duration:"10 min", detail:"Résistance modérée, cadence élevée" },
+    exercises:[
+      { name:"Presse à cuisses",          sets:4, reps:"12",      muscle:"Quadriceps",      machine:"Leg Press Machine",     tip:"Pieds à largeur d'épaules, descente jusqu'à 90°" },
+      { name:"Fentes avec haltères",      sets:3, reps:"10/jambe",muscle:"Fessiers",         machine:"Haltères libres",        tip:"Genou avant ne dépasse pas le pied, buste droit" },
+      { name:"Leg curl allongé",          sets:3, reps:"12",      muscle:"Ischio-jambiers", machine:"Leg Curl Machine",       tip:"Contraction maximale en haut, descente contrôlée" },
+      { name:"Leg extension",             sets:3, reps:"15",      muscle:"Quadriceps",      machine:"Leg Extension Machine",  tip:"Mouvement lent et contrôlé, pause 1s en haut" },
+      { name:"Élévations mollets debout", sets:4, reps:"20",      muscle:"Mollets",         machine:"Calf Raise Machine",     tip:"Pause 1 sec en haut, amplitude maximale" },
+      { name:"Cours Cuisses Fessiers",    sets:1, reps:"30 min",  muscle:"Jambes/Fessiers", machine:"Studio cours Keepcool",  tip:"Cours collectif disponible, intensité cardio garantie" },
+    ],
+    finisher:{ name:"Stepper ou Escalier", duration:"10 min", detail:"Intensité progressive pour brûler les graisses" },
+    stretching:["Fente basse quadriceps (45s/jambe)","Ischio au sol (45s)","Pigeon fessiers (45s/côté)"],
+  },
+  { id:"vendredi", label:"VENDREDI", emoji:"🎯", optional:true, focus:"Full Body · Renforcement complet", color:"#34D399",
+    cardio:{ name:"Tapis ou Vélo au choix", duration:"10 min", detail:"Échauffement général avant le full body" },
+    exercises:[
+      { name:"Squat hack machine",          sets:4, reps:"12",    muscle:"Quadriceps",     machine:"Hack Squat Machine",    tip:"Pieds légèrement en avant, dos plaqué contre le dossier" },
+      { name:"Développé incliné machine",   sets:3, reps:"12",    muscle:"Pectoraux hauts",machine:"Incline Press Machine",  tip:"Angle 30-45°, pression vers le haut et l'avant" },
+      { name:"Tirage vertical prise large", sets:3, reps:"12",    muscle:"Grand dorsal",   machine:"Lat Pulldown Machine",  tip:"Prise large, tire vers la poitrine, omoplates serrées" },
+      { name:"Rowing machine poitrine",     sets:3, reps:"12",    muscle:"Trapèzes / Dos", machine:"Chest Supported Row",   tip:"Poitrine appuyée, tire en ramenant les coudes derrière" },
+      { name:"Développé épaules haltères",  sets:3, reps:"12",    muscle:"Épaules",        machine:"Haltères libres",        tip:"Assis, presse vers le haut sans cambrer le dos" },
+      { name:"Gainage planche",             sets:3, reps:"45 sec",muscle:"Core / Abdos",   machine:"Tapis / sol",           tip:"Corps aligné, bassin neutre, respiration régulière" },
+    ],
+    finisher:{ name:"Cardio Boxe ou HIIT", duration:"20 min", detail:"Cours collectif Keepcool si dispo !" },
+    stretching:["Full body stretch (2 min)","Chat/vache dos (10 rép)","Cobra lombaires (30s)"],
+  },
+  { id:"samedi", label:"SAMEDI", emoji:"💪", optional:false, focus:"Dos · Biceps · Abdominaux", color:"#A78BFA",
+    cardio:{ name:"Rameur (Rowing Machine)", duration:"10 min", detail:"Excellent pour le dos et le cardio simultanément" },
+    exercises:[
+      { name:"Tirage vertical machine",  sets:3, reps:"12", muscle:"Grand dorsal",       machine:"Lat Pulldown Machine", tip:"Tire vers le menton, omoplates abaissées avant le tirage" },
+      { name:"Rowing assis câble",       sets:3, reps:"12", muscle:"Trapèzes / Dos",     machine:"Cable Row Machine",    tip:"Dos droit, coudes le long du corps, tire vers le nombril" },
+      { name:"Tirage horizontal câble",  sets:3, reps:"15", muscle:"Rhomboïdes",         machine:"Cable Tower / Poulie", tip:"Coudes le long du corps, contraction 1s en fin de mouvement" },
+      { name:"Curl biceps haltères",     sets:3, reps:"12", muscle:"Biceps",             machine:"Haltères libres",      tip:"Supination complète au sommet, descente lente et contrôlée" },
+      { name:"Curl marteau haltères",    sets:3, reps:"12", muscle:"Biceps / Avant-bras",machine:"Haltères libres",      tip:"Poignet neutre tout du long, coudes fixes" },
+      { name:"Crunchs abdos machine",    sets:3, reps:"20", muscle:"Abdominaux",         machine:"Ab Machine ou tapis",  tip:"Expire fort en montant, inspire en descendant" },
+    ],
+    finisher:{ name:"HIIT Elliptique", duration:"8 min", detail:"1 min intensité max / 1 min récup × 4" },
+    stretching:["Chat/vache dos (10 rép)","Cobra lombaires (30s × 3)","Étirement biceps au mur (30s/bras)"],
+  },
+  { id:"dimanche", label:"DIMANCHE", emoji:"🏃", optional:false, focus:"Cardio intensif · Full Body · Récup", color:"#F59E0B",
+    cardio:{ name:"Running – Tapis de course", duration:"20 min", detail:"Interval : 1 min rapide / 2 min marche × 6" },
+    exercises:[
+      { name:"Burpees",                  sets:3, reps:"15",     muscle:"Full Body",      machine:"Espace libre / sol",    tip:"Maintiens le rythme, saute haut à chaque répétition" },
+      { name:"Développé couché incliné", sets:3, reps:"12",     muscle:"Pectoraux hauts",machine:"Incline Press Machine", tip:"Complète le travail du lundi sur les pectoraux hauts" },
+      { name:"Tirage nuque poulie",      sets:3, reps:"12",     muscle:"Dos large",      machine:"Cable Tower / Poulie",  tip:"Prise large, tire derrière la tête, omoplates serrées" },
+      { name:"Gainage planche longue",   sets:3, reps:"60 sec", muscle:"Core / Abdos",   machine:"Tapis / sol",           tip:"1 min de planche, respiration lente, ne lâche pas !" },
+      { name:"Mountain climbers",        sets:3, reps:"30 sec", muscle:"Core + Cardio",  machine:"Au sol",                tip:"Rythme rapide, genoux vers la poitrine en alternant" },
+      { name:"Roll Fit Keepcool",        sets:1, reps:"10 min", muscle:"Récupération",   machine:"Roll Fit Machine",      tip:"Roule sur les jambes, fessiers et dos pour récupérer" },
+    ],
+    finisher:{ name:"Cours HIIT ou Cardio Boxe", duration:"30 min", detail:"Cours collectif si disponible !" },
+    stretching:["Full body stretch au sol (3 min)","Rotation colonne (10 rép)","Relaxation profonde (5 min)"],
+  },
+];
+
+const DAY_MAP  = {1:"lundi",3:"mercredi",5:"vendredi",6:"samedi",0:"dimanche"};
+const WEEK_L   = ["L","Ma","Me","J","V","S","D"];
+const WEEK_IDS = ["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"];
+const ALL_EX   = [];
+DAYS.forEach(d => d.exercises.forEach(ex => ALL_EX.push({ex, color:d.color})));
+
+// ── STORAGE ───────────────────────────────────────────────────────────────────
+function storKey(){const n=new Date(),m=new Date(n);m.setDate(n.getDate()-((n.getDay()+6)%7));return"kc_"+m.toISOString().slice(0,10);}
+function loadP(){try{return JSON.parse(localStorage.getItem(storKey())||"{}");}catch{return{};}}
+function saveP(d){try{localStorage.setItem(storKey(),JSON.stringify(d));}catch{}}
+function loadH(){try{return JSON.parse(localStorage.getItem("kc_hist")||"[]");}catch{return[];}}
+function saveH(d){try{localStorage.setItem("kc_hist",JSON.stringify(d));}catch{}}
+// Journal de poids : clé "log_YYYY-MM-DD_exName_set"
+function logKey(exName,set){return "log_"+new Date().toISOString().slice(0,10)+"_"+exName+"_"+set;}
+function loadLog(exName,set){try{return JSON.parse(localStorage.getItem(logKey(exName,set))||"null");}catch{return null;}}
+function saveLog(exName,set,val){try{localStorage.setItem(logKey(exName,set),JSON.stringify(val));}catch{}}
+// PR (personal record) par exercice
+function prKey(exName){return "pr_"+exName;}
+function loadPR(exName){try{return JSON.parse(localStorage.getItem(prKey(exName))||"null");}catch{return null;}}
+function savePR(exName,kg){try{localStorage.setItem(prKey(exName),JSON.stringify(kg));}catch{}}
+// Historique log semaine précédente pour affichage
+function prevLogKey(exName,set){
+  const n=new Date(),m=new Date(n);
+  m.setDate(n.getDate()-((n.getDay()+6)%7)-7);
+  return "log_"+m.toISOString().slice(0,10)+"_"+exName+"_"+set;
+}
+function loadPrevLog(exName,set){try{return JSON.parse(localStorage.getItem(prevLogKey(exName,set))||"null");}catch{return null;}}
+
+function weekNum(d){const dt=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));dt.setUTCDate(dt.getUTCDate()+4-(dt.getUTCDay()||7));return Math.ceil((((dt-new Date(Date.UTC(dt.getUTCFullYear(),0,1)))/86400000)+1)/7);}
+
+let progress = loadP();
+let history  = loadH();
+let curView  = "home";
+let curDay   = DAY_MAP[new Date().getDay()] || "lundi";
+const todayId = DAY_MAP[new Date().getDay()] || null;
+
+function sessPct(d){
+  const total=d.exercises.length+2;
+  const done=d.exercises.filter(ex=>progress[d.id+"_"+ex.name]).length
+    +(progress[d.id+"_cardio"]?1:0)+(progress[d.id+"_finisher"]?1:0);
+  return{pct:Math.round((done/total)*100),done,total};
+}
+function sessDone(){return DAYS.filter(d=>sessPct(d).pct===100).length;}
+function weekValid(){return sessDone()>=3;}
+
+function toggle(key){
+  progress[key]=!progress[key];
+  saveP(progress);
+  const done=sessDone(),lbl="S"+weekNum(new Date());
+  const i=history.findIndex(h=>h.label===lbl);
+  if(i>=0)history[i].sessions=done;
+  else if(done>0)history.push({label:lbl,sessions:done});
+  saveH(history);
+  render();
+}
+
+// ── JOURNAL POIDS ─────────────────────────────────────────────────────────────
+
+function saveLogInput(exName, set){
+  const kgEl = document.getElementById("kg_"+exName+"_"+set);
+  const repEl = document.getElementById("rep_"+exName+"_"+set);
+  if(!kgEl || !repEl) return;
+  const kg = parseFloat(kgEl.value), rep = parseInt(repEl.value);
+  if(!isNaN(kg) && !isNaN(rep) && kg > 0){
+    saveLog(exName, set, {kg, rep});
+    // Mise à jour PR
+    const pr = loadPR(exName);
+    const rm = kg * (1 + rep/30); // formule Epley approximative
+    if(!pr || rm > pr.rm) savePR(exName, {kg, rep, rm: Math.round(rm*10)/10});
+    // Rafraîchir juste les badges PR sans re-render complet
+    updatePRBadge(exName);
+  }
+}
+
+function updatePRBadge(exName){
+  const el = document.getElementById("pr_badge_"+CSS.escape(exName));
+  if(!el) return;
+  const pr = loadPR(exName);
+  if(pr) el.innerHTML = `🏆 PR : ${pr.kg}kg × ${pr.rep} reps`;
+}
+
+function toggleLog(exName, sets){
+  const panel = document.getElementById("logpanel_"+CSS.escape(exName));
+  if(!panel) return;
+  panel.style.display = panel.style.display === "none" ? "block" : "none";
+}
+
+// ── CHRONOMÈTRE DE REPOS ──────────────────────────────────────────────────────
+
+let timerInterval = null;
+let timerTotal    = 90;
+let timerLeft     = 90;
+const CIRC        = 2 * Math.PI * 88; // circonférence du cercle r=88
+
+function startTimer(sec){
+  timerTotal = sec;
+  timerLeft  = sec;
+  document.getElementById("timer-overlay").style.display = "flex";
+  updateTimerUI();
+  clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    timerLeft--;
+    updateTimerUI();
+    if(timerLeft <= 0){
+      clearInterval(timerInterval);
+      // Vibration si supportée
+      if(navigator.vibrate) navigator.vibrate([300,100,300]);
+      document.getElementById("timer-num").textContent = "GO !";
+      document.getElementById("timer-arc").style.stroke = "#34D399";
+    }
+  }, 1000);
+}
+
+function updateTimerUI(){
+  const el = document.getElementById("timer-num");
+  const arc = document.getElementById("timer-arc");
+  if(!el || !arc) return;
+  el.textContent = timerLeft > 0 ? timerLeft : "GO !";
+  const pct = timerLeft / timerTotal;
+  arc.style.strokeDashoffset = CIRC * (1 - pct);
+  arc.style.stroke = timerLeft <= 10 ? "#F59E0B" : timerLeft <= 0 ? "#34D399" : "#FF6B35";
+}
+
+function addTimer(delta){
+  timerLeft = Math.max(5, timerLeft + delta);
+  timerTotal = Math.max(5, timerTotal + delta);
+  updateTimerUI();
+}
+
+function closeTimer(){
+  clearInterval(timerInterval);
+  document.getElementById("timer-overlay").style.display = "none";
+}
+
+// ── MODAL INFO ────────────────────────────────────────────────────────────────
+
+function openModal(idx){
+  const item = ALL_EX[idx];
+  if(!item) return;
+  const {ex, color} = item;
+  const imgUrl = IMGS[ex.name]||"";
+  const imgZone = document.getElementById("modal-img-zone");
+  if(imgUrl){
+    imgZone.style.background="#efefef";
+    imgZone.innerHTML=`<img src="${imgUrl}" alt="${ex.name}" style="width:100%;height:100%;object-fit:cover"
+      onerror="this.parentElement.style.background='${color}15';this.outerHTML='<span style=font-size:64px>🏋️</span>'"/>`;
+  } else {
+    imgZone.style.background=color+"15";
+    imgZone.innerHTML=`<span style="font-size:64px">🏋️</span>`;
+  }
+  document.getElementById("modal-content").innerHTML=`
+    <div style="font-size:21px;font-weight:900;color:${color};letter-spacing:1px;margin-bottom:10px">${ex.name.toUpperCase()}</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      <span style="font-size:12px;background:${color}22;color:${color};border-radius:20px;padding:3px 12px;font-weight:700">${ex.sets} séries × ${ex.reps}</span>
+      <span style="font-size:12px;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.5);border-radius:20px;padding:3px 12px">💪 ${ex.muscle}</span>
+    </div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:12px">🏋️ Machine : <strong style="color:rgba(255,255,255,0.88)">${ex.machine}</strong></div>
+    <div style="background:${color}15;border:1px solid ${color}30;border-radius:12px;padding:12px 14px;font-size:13px;color:${color};line-height:1.6">💡 ${ex.tip}</div>`;
+  document.getElementById("modal").style.display="flex";
+}
+function closeModal(){document.getElementById("modal").style.display="none";}
+document.getElementById("modal").addEventListener("click",function(e){if(e.target===this)closeModal();});
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+
+function showView(v){
+  curView=v;
+  document.querySelectorAll(".view").forEach(el=>el.classList.remove("active"));
+  document.getElementById("view-"+v).classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach((b,i)=>b.classList.toggle("active",["home","program","calc","stats"][i]===v));
+  document.querySelectorAll(".bnav-btn").forEach(b=>b.classList.toggle("active",b.id==="bnav-"+v));
+  render();
+}
+
+// ── HOME ──────────────────────────────────────────────────────────────────────
+
+function renderHome(){
+  const totalEx=DAYS.reduce((a,d)=>a+d.exercises.length+2,0);
+  const totalDone=DAYS.reduce((a,d)=>a+sessPct(d).done,0);
+  const wPct=Math.round((totalDone/totalEx)*100);
+  const sd=sessDone(),wv=weekValid();
+  let h="";
+  if(wv) h+=`<div class="valid-banner"><span style="font-size:28px">🏆</span><div>
+    <div style="font-size:16px;font-weight:900;color:#0a0a0f">SEMAINE VALIDÉE !</div>
+    <div style="font-size:12px;color:rgba(0,0,0,0.65)">${sd} séances complètes 💪</div>
+  </div></div>`;
+  h+=`<div class="week-box">
+    <div style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.4);margin-bottom:12px">SEMAINE EN COURS</div>
+    <div style="display:flex;justify-content:space-around;margin-bottom:14px">
+      <div style="text-align:center"><div style="font-size:34px;font-weight:900;color:#FF6B35">${sd}/5</div><div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px">Séances</div></div>
+      <div style="text-align:center"><div style="font-size:34px;font-weight:900;color:#4ECDC4">${wPct}%</div><div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px">Complété</div></div>
+      <div style="text-align:center"><div style="font-size:34px;font-weight:900;color:${wv?"#34D399":"rgba(255,255,255,0.3)"}">${wv?"✓":"✗"}</div><div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px">Semaine OK</div></div>
+    </div>
+    <div class="pbar"><div class="pbar-fill" style="width:${wPct}%;background:linear-gradient(90deg,#FF6B35,#4ECDC4)"></div></div>
+    <div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,0.3);text-align:center">Validée à partir de 3 séances · Vendredi optionnel</div>
+  </div>`;
+  // Calendrier
+  h+=`<div style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.3);margin-bottom:10px">CETTE SEMAINE</div><div class="mini-cal">`;
+  const tidx=new Date().getDay();
+  WEEK_L.forEach((lbl,i)=>{
+    const did=WEEK_IDS[i],td=DAYS.find(d=>d.id===did);
+    const isT=i===((tidx+6)%7),done=td?sessPct(td).pct===100:false;
+    const bg=done?"#4ECDC4":isT?"rgba(255,107,53,0.2)":td?"rgba(255,255,255,0.06)":"rgba(255,255,255,0.03)";
+    const bc=isT?"#FF6B35":done?"#4ECDC4":td?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.04)";
+    const tc=done?"#0a0a0f":isT?"#FF6B35":td?"#f0f0f0":"rgba(255,255,255,0.2)";
+    const click=td?`onclick="showView('program');curDay='${did}';renderProgram()"`:""
+    h+=`<div class="cal-day" style="background:${bg};border:1px solid ${bc};cursor:${td?"pointer":"default"}" ${click}>
+      ${td?.optional?`<div class="cal-dot"></div>`:""}
+      <span style="font-size:10px;font-weight:700;color:${tc}">${lbl}</span>
+      ${td?`<span style="font-size:8px;margin-top:1px;color:${done?"#0a0a0f":"rgba(255,255,255,0.3)"}">${td.emoji}</span>`:""}
+    </div>`;
+  });
+  h+="</div>";
+  if(todayId){
+    const d=DAYS.find(x=>x.id===todayId),{pct}=sessPct(d);
+    const cta=pct===0?"COMMENCER →":pct===100?"TERMINÉE ✓":"CONTINUER →";
+    h+=`<div style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.3);margin-bottom:10px">AUJOURD'HUI</div>
+    <button style="width:100%;background:linear-gradient(135deg,${d.color}30,${d.color}10);border:1px solid ${d.color}60;border-radius:20px;padding:18px;text-align:left;cursor:pointer;box-shadow:0 8px 32px ${d.color}18"
+      onclick="showView('program');curDay='${d.id}';renderProgram()">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span style="font-size:20px;font-weight:900;color:${d.color}">${d.emoji} ${d.label}</span>
+            ${d.optional?`<span style="font-size:10px;background:rgba(52,211,153,0.2);color:#34D399;border:1px solid rgba(52,211,153,0.25);border-radius:20px;padding:2px 8px;font-weight:700">OPTIONNEL</span>`:""}
+          </div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5)">${d.focus}</div>
+        </div>
+        <div style="font-size:32px;font-weight:900;color:${d.color}">${pct}%</div>
+      </div>
+      <div class="pbar" style="margin-top:10px"><div class="pbar-fill" style="width:${pct}%;background:${d.color}"></div></div>
+      <div style="margin-top:8px;text-align:right;font-size:11px;color:${d.color};font-weight:700;letter-spacing:1px">${cta}</div>
+    </button>`;
+  } else {
+    h+=`<div class="rest-card"><div style="font-size:32px">😴</div>
+      <div style="font-size:16px;font-weight:700;margin-top:8px;color:rgba(255,255,255,0.6)">JOUR DE REPOS</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.3);margin-top:4px">Récupère bien, tu reviens plus fort !</div></div>`;
+  }
+  document.getElementById("view-home").innerHTML=h;
+}
+
+// ── PROGRAMME ────────────────────────────────────────────────────────────────
+
+function renderProgram(){
+  let sel="";
+  DAYS.forEach(d=>{
+    const complete=sessPct(d).pct===100,active=curDay===d.id;
+    const bg=active?d.color:complete?d.color+"25":"rgba(255,255,255,0.05)";
+    const border=active?d.color:complete?d.color+"60":"rgba(255,255,255,0.1)";
+    const color=active?"#0a0a0f":complete?d.color:"rgba(255,255,255,0.6)";
+    sel+=`<button class="day-btn" style="background:${bg};border:1px solid ${border};color:${color}" onclick="curDay='${d.id}';renderProgram()">
+      ${d.optional&&!active?`<div class="cal-dot" style="top:3px;right:3px"></div>`:""}
+      ${d.emoji}<br>${d.label.slice(0,3)}</button>`;
+  });
+  document.getElementById("day-selector").innerHTML=sel;
+
+  const day=DAYS.find(d=>d.id===curDay);
+  if(!day){document.getElementById("day-card-container").innerHTML="";return;}
+  const {pct}=sessPct(day);
+  const exDone=day.exercises.filter(ex=>progress[day.id+"_"+ex.name]).length;
+  const ck=day.id+"_cardio",fk=day.id+"_finisher";
+  const isToday=todayId===day.id;
+  let baseIdx=0;
+  for(let i=0;i<DAYS.length;i++){if(DAYS[i].id===day.id)break;baseIdx+=DAYS[i].exercises.length;}
+
+  let h=`<div class="day-card" style="border:1px solid ${isToday?day.color+"60":"rgba(255,255,255,0.08)"};box-shadow:${isToday?"0 0 30px "+day.color+"20":"none"}">
+  <div class="day-hd" style="background:linear-gradient(135deg,${day.color}25,${day.color}08)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+          <span style="font-size:22px">${day.emoji}</span>
+          <span style="font-size:22px;font-weight:800;color:${day.color};letter-spacing:2px">${day.label}</span>
+          ${day.optional?`<span style="font-size:10px;background:rgba(52,211,153,0.2);color:#34D399;border:1px solid rgba(52,211,153,0.25);border-radius:20px;padding:2px 8px;font-weight:700">OPTIONNEL</span>`:""}
+          ${isToday?`<span style="font-size:10px;background:${day.color};color:#0a0a0f;border-radius:20px;padding:2px 8px;font-weight:800">AUJOURD'HUI</span>`:""}
+          ${pct===100?"✅":""}
+        </div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.5)">${day.focus}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:26px;font-weight:900;color:${pct===100?day.color:"#f0f0f0"}">${pct}%</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.3)">${exDone}/${day.exercises.length}</div>
+      </div>
+    </div>
+    <div class="pbar" style="margin-top:12px"><div class="pbar-fill" style="width:${pct}%;background:linear-gradient(90deg,${day.color},${day.color}aa)"></div></div>
+  </div>
+  <div class="day-bd">`;
+
+  // Cardio
+  const cdone=!!progress[ck];
+  h+=`<div style="margin-bottom:16px">
+    <div class="section-lbl" style="color:${day.color}">🔥 ÉCHAUFFEMENT CARDIO</div>
+    <div style="background:${cdone?day.color+"15":"rgba(255,255,255,0.04)"};border:1px solid ${cdone?day.color+"40":"rgba(255,255,255,0.08)"};border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px">
+      <button class="cb" style="border-color:${cdone?day.color:"rgba(255,255,255,0.2)"};background:${cdone?day.color:"transparent"}" onclick="toggle('${ck}')">
+        ${cdone?`<span style="color:#0a0a0f;font-weight:900;font-size:14px">✓</span>`:""}
+      </button>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:${cdone?day.color:"#f0f0f0"};text-decoration:${cdone?"line-through":"none"};opacity:${cdone?0.55:1}">${day.cardio.name}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">${day.cardio.duration} — ${day.cardio.detail}</div>
+      </div>
+    </div>
+  </div>`;
+
+  // Exercices avec journal + timer
+  h+=`<div style="margin-bottom:16px"><div class="section-lbl" style="color:${day.color}">💪 MUSCULATION</div>`;
+  day.exercises.forEach((ex,i)=>{
+    const key=day.id+"_"+ex.name,d2=!!progress[key],idx=baseIdx+i;
+    const pr=loadPR(ex.name);
+    const exId=CSS.escape(ex.name);
+
+    // Récupère les logs existants du jour
+    let prevHtml="", prHtml="";
+    const prevLogs=[];
+    for(let s=1;s<=ex.sets;s++){
+      const prev=loadPrevLog(ex.name,s);
+      if(prev) prevLogs.push(`S${s}: ${prev.kg}kg×${prev.rep}`);
+    }
+    if(prevLogs.length) prevHtml=`<div class="log-prev">Semaine passée : ${prevLogs.join(" · ")}</div>`;
+    if(pr) prHtml=`<div class="log-pr" id="pr_badge_${exId}" style="color:#F59E0B">🏆 PR : ${pr.kg}kg × ${pr.rep} reps</div>`;
+    else prHtml=`<div id="pr_badge_${exId}"></div>`;
+
+    // Lignes de saisie par série
+    let setsHtml="";
+    for(let s=1;s<=ex.sets;s++){
+      const cur=loadLog(ex.name,s);
+      setsHtml+=`<div class="log-set-row">
+        <span class="log-set-num">Série ${s}</span>
+        <input class="log-input" id="kg_${ex.name}_${s}" type="number" min="0" step="0.5" placeholder="kg"
+          value="${cur?cur.kg:""}" onchange="saveLogInput('${ex.name}',${s})" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 8px;font-size:13px;width:65px;text-align:center;color:#f0f0f0"/>
+        <span class="log-sep">×</span>
+        <input class="log-input" id="rep_${ex.name}_${s}" type="number" min="0" step="1" placeholder="reps"
+          value="${cur?cur.rep:""}" onchange="saveLogInput('${ex.name}',${s})" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 8px;font-size:13px;width:65px;text-align:center;color:#f0f0f0"/>
+        <button onclick="startTimer(90)" style="background:rgba(255,107,53,0.15);border:1px solid rgba(255,107,53,0.3);border-radius:8px;padding:6px 10px;font-size:16px;cursor:pointer" title="Lancer le timer de repos">⏱️</button>
+      </div>`;
+    }
+
+    h+=`<div class="ex-row" style="background:${d2?day.color+"15":"rgba(255,255,255,0.04)"};border-color:${d2?day.color+"40":"rgba(255,255,255,0.08)"}">
+      <div class="ex-main">
+        <button class="cb" style="border-color:${d2?day.color:"rgba(255,255,255,0.2)"};background:${d2?day.color:"transparent"}" onclick="toggle('${key}')">
+          ${d2?`<span style="color:#0a0a0f;font-weight:900;font-size:14px">✓</span>`:""}
+        </button>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700;color:${d2?day.color:"#f0f0f0"};text-decoration:${d2?"line-through":"none"};opacity:${d2?0.55:1}">${ex.name}</div>
+          <div style="display:flex;gap:10px;margin-top:3px">
+            <span style="font-size:11px;color:${day.color};opacity:0.85">${ex.sets} séries × ${ex.reps}</span>
+            <span style="font-size:11px;color:rgba(255,255,255,0.3)">• ${ex.muscle}</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="info-btn" style="background:${day.color}18;border:1.5px solid ${day.color}55;color:${day.color}" onclick="openModal(${idx})">i</button>
+          <button onclick="toggleLog('${ex.name}',${ex.sets})" style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Journal de poids">📝</button>
+        </div>
+      </div>
+      <div class="log-panel" id="logpanel_${exId}" style="display:none">
+        <div class="log-title">📊 JOURNAL DE POIDS</div>
+        <div class="log-sets">${setsHtml}</div>
+        ${prevHtml}${prHtml}
+      </div>
+    </div>`;
+  });
+  h+="</div>";
+
+  // Finisher
+  const fdone=!!progress[fk];
+  h+=`<div style="margin-bottom:16px">
+    <div class="section-lbl" style="color:${day.color}">⚡ FINISHER</div>
+    <div style="background:${fdone?day.color+"15":"rgba(255,255,255,0.04)"};border:1px solid ${fdone?day.color+"40":"rgba(255,255,255,0.08)"};border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px">
+      <button class="cb" style="border-color:${fdone?day.color:"rgba(255,255,255,0.2)"};background:${fdone?day.color:"transparent"}" onclick="toggle('${fk}')">
+        ${fdone?`<span style="color:#0a0a0f;font-weight:900;font-size:14px">✓</span>`:""}
+      </button>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:${fdone?day.color:"#f0f0f0"};text-decoration:${fdone?"line-through":"none"};opacity:${fdone?0.55:1}">${day.finisher.name} — ${day.finisher.duration}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">${day.finisher.detail}</div>
+      </div>
+    </div>
+  </div>`;
+
+  // Étirements
+  h+=`<div><div class="section-lbl" style="color:rgba(255,255,255,0.3)">🧘 RÉCUPÉRATION</div>`;
+  day.stretching.forEach(s=>{h+=`<div class="stretch-item">${s}</div>`;});
+  h+="</div></div></div>";
+  document.getElementById("day-card-container").innerHTML=h;
+}
+
+// ── CALCULATEUR DE CHARGE ─────────────────────────────────────────────────────
+
+function renderCalc(){
+  // On ne recrée le HTML des inputs QU'une seule fois (première ouverture)
+  if(document.getElementById("calc-kg")) {
+    updateCalcTable(); // déjà affiché, juste mettre à jour le tableau
+    return;
+  }
+  const stored = JSON.parse(localStorage.getItem("calc_state")||"{}");
+  const kg  = stored.kg  || "";
+  const rep = stored.rep || "";
+
+  document.getElementById("view-calc").innerHTML=`
+    <div style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.3);margin-bottom:18px">CALCULATEUR DE CHARGES</div>
+
+    <div class="calc-box" style="margin-bottom:14px">
+      <div style="font-size:14px;font-weight:700;color:#f0f0f0;margin-bottom:6px">Comment utiliser :</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.7">
+        1️⃣ Fais une série avec un poids que tu connais.<br>
+        2️⃣ Entre ce poids (ex : 40 kg) et le nombre de reps que tu as fait (ex : 10).<br>
+        3️⃣ L'app calcule ta <strong style="color:#FF6B35">force maximale estimée (1RM)</strong> et te donne le <strong style="color:#f0f0f0">poids idéal</strong> pour chaque objectif.<br>
+        4️⃣ La ligne <span style="color:#FF6B35;font-weight:700">orange</span> = zone d'hypertrophie (12 reps), idéale pour ton programme.
+      </div>
+    </div>
+
+    <div class="calc-box">
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px;font-weight:600">Ton poids × tes reps :</div>
+      <div class="calc-input-row">
+        <div style="flex:1">
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:6px">POIDS SOULEVÉ (kg)</div>
+          <input class="calc-input" id="calc-kg" type="number" min="0" step="0.5" placeholder="ex: 40" value="${kg}"
+            oninput="saveCalcState();updateCalcTable()"/>
+        </div>
+        <div style="font-size:24px;color:rgba(255,255,255,0.2);padding-top:22px;text-align:center">×</div>
+        <div style="flex:1">
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:6px">REPS RÉALISÉES</div>
+          <input class="calc-input" id="calc-rep" type="number" min="1" step="1" placeholder="ex: 10" value="${rep}"
+            oninput="saveCalcState();updateCalcTable()"/>
+        </div>
+      </div>
+      <div id="calc-result"></div>
+    </div>`;
+
+  updateCalcTable();
+}
+
+function updateCalcTable(){
+  const kgEl  = document.getElementById("calc-kg");
+  const repEl = document.getElementById("calc-rep");
+  const resEl = document.getElementById("calc-result");
+  if(!kgEl || !repEl || !resEl) return;
+
+  const kg  = parseFloat(kgEl.value);
+  const rep = parseInt(repEl.value);
+
+  if(!kg || !rep || kg <= 0 || rep <= 0){
+    resEl.innerHTML = `<div style="text-align:center;padding:20px 0;font-size:13px;color:rgba(255,255,255,0.3)">
+      ⬆️ Entre un poids et des reps pour voir tes charges
+    </div>`;
+    return;
+  }
+
+  // Formule Epley : 1RM estimée = poids × (1 + reps / 30)
+  const orm = kg * (1 + rep / 30);
+
+  const rows = [
+    {pct:100, reps:"1",  label:"Force maximale",      desc:"Ta limite absolue"},
+    {pct:90,  reps:"3",  label:"Force",                desc:"Développe la puissance"},
+    {pct:85,  reps:"5",  label:"Force",                desc:"Développe la puissance"},
+    {pct:80,  reps:"8",  label:"Hypertrophie",         desc:"Prise de masse"},
+    {pct:75,  reps:"10", label:"Hypertrophie",         desc:"Prise de masse"},
+    {pct:70,  reps:"12", label:"Hypertrophie",         desc:"Idéal pour ce programme", highlight:true},
+    {pct:65,  reps:"15", label:"Endurance musculaire", desc:"Cardio-musculaire"},
+    {pct:60,  reps:"20", label:"Endurance musculaire", desc:"Brûle-graisses"},
+  ];
+
+  let tableHtml = `
+    <div style="margin:16px 0 12px;text-align:center;padding:12px;background:rgba(255,107,53,0.1);border-radius:12px;border:1px solid rgba(255,107,53,0.25)">
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:4px">1RM ESTIMÉE</div>
+      <div style="font-size:28px;font-weight:900;color:#FF6B35">${Math.round(orm*10)/10} kg</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:2px">basé sur ${kg}kg × ${rep} reps</div>
+    </div>
+    <table class="calc-table">
+      <thead><tr><th>%</th><th>Poids conseillé</th><th>Reps</th><th>Zone</th></tr></thead>
+      <tbody>`;
+
+  rows.forEach(row => {
+    const weight = Math.round((orm * row.pct / 100) * 2) / 2; // arrondi au 0,5 kg
+    const isCur  = row.reps == rep;
+    const isHL   = row.highlight;
+    tableHtml += `<tr ${(isCur||isHL) ? 'class="highlight"' : ""}>
+      <td style="color:rgba(255,255,255,0.5)">${row.pct}%</td>
+      <td><strong>${weight} kg</strong></td>
+      <td>${row.reps} reps</td>
+      <td style="font-size:11px;color:rgba(255,255,255,${(isCur||isHL)?"0.85":"0.3"})">${isCur?"👉 ":isHL?"⭐ ":""}${row.label}</td>
+    </tr>`;
+  });
+
+  tableHtml += `</tbody></table>
+    <div style="margin-top:10px;font-size:10px;color:rgba(255,255,255,0.2);text-align:center">
+      Formule Epley · Poids arrondis au 0,5 kg · Estimation théorique
+    </div>`;
+
+  resEl.innerHTML = tableHtml;
+}
+
+function saveCalcState(){
+  const kg  = document.getElementById("calc-kg")?.value  || "";
+  const rep = document.getElementById("calc-rep")?.value || "";
+  try{ localStorage.setItem("calc_state", JSON.stringify({kg, rep})); }catch{}
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────────
+
+function renderStats(){
+  const sd=sessDone(),wv=weekValid();
+  let h=`<div style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.3);margin-bottom:16px">MES STATISTIQUES</div>`;
+  if(wv) h+=`<div class="valid-banner"><span style="font-size:22px">🏆</span><div>
+    <div style="font-size:15px;font-weight:900;color:#0a0a0f">SEMAINE VALIDÉE — ${sd} séances</div>
+    <div style="font-size:11px;color:rgba(0,0,0,0.5)">Objectif atteint (min. 3 séances)</div>
+  </div></div>`;
+
+  h+=`<div class="stats-card"><div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:2px;margin-bottom:12px">PROGRESSION PAR JOUR</div>`;
+  DAYS.forEach(d=>{
+    const{pct,done,total}=sessPct(d);
+    h+=`<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:12px;font-weight:700">${d.emoji} ${d.label}</span>
+          ${d.optional?`<span style="font-size:9px;color:#34D399">optionnel</span>`:""}
+        </div>
+        <span style="font-size:12px;color:${d.color};font-weight:700">${done}/${total}</span>
+      </div>
+      <div class="pbar"><div class="pbar-fill" style="width:${pct}%;background:${d.color}"></div></div>
+    </div>`;
+  });
+  h+="</div>";
+
+  // Records personnels
+  const prs=[];
+  ALL_EX.forEach(({ex,color})=>{const pr=loadPR(ex.name);if(pr)prs.push({name:ex.name,pr,color});});
+  if(prs.length){
+    h+=`<div class="stats-card"><div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:2px;margin-bottom:14px">🏆 RECORDS PERSONNELS</div>`;
+    prs.forEach(p=>{
+      h+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+        <span style="font-size:13px">${p.name}</span>
+        <span style="font-size:13px;color:${p.color};font-weight:700">${p.pr.kg}kg × ${p.pr.rep}</span>
+      </div>`;
+    });
+    h+="</div>";
+  }
+
+  h+=`<div class="stats-card"><div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:2px;margin-bottom:14px">GROUPES MUSCULAIRES</div>`;
+  [["Pectoraux","Lun+Ven+Dim","#FF6B35"],["Épaules / Triceps","Lun+Ven","#FF6B35"],
+   ["Dos / Dorsaux","Ven+Sam+Dim","#A78BFA"],["Biceps / Abdos","Sam","#A78BFA"],
+   ["Quadriceps / Fessiers","Mer+Ven","#4ECDC4"],["Ischio / Mollets","Mer","#4ECDC4"],
+   ["Core / Gainage","Ven+Dim","#34D399"],["Cardio","Tous les jours","#F59E0B"]
+  ].forEach(([l,d,c])=>{
+    h+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px">
+      <span>${l}</span><span style="font-size:11px;color:${c};font-weight:700">${d}</span></div>`;
+  });
+  h+="</div>";
+
+  if(history.length>0){
+    const last8=history.slice(-8),maxS=Math.max(...last8.map(x=>x.sessions),3);
+    h+=`<div class="stats-card"><div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:2px;margin-bottom:14px">HISTORIQUE SEMAINES</div>
+    <div style="display:flex;align-items:flex-end;gap:8px;height:60px;margin-bottom:8px">`;
+    last8.forEach(w=>{
+      const ht=Math.round((w.sessions/maxS)*48);
+      const bg=w.sessions>=3?"#4ECDC4":w.sessions>=2?"#FF6B35":"rgba(255,255,255,0.15)";
+      h+=`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div style="width:100%;border-radius:4px;min-height:4px;height:${ht}px;background:${bg};position:relative">
+          ${w.sessions>=3?`<div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:10px">⭐</div>`:""}
+        </div>
+        <span style="font-size:9px;color:rgba(255,255,255,0.3)">${w.label}</span>
+      </div>`;
+    });
+    h+=`</div><div style="display:flex;gap:12px;justify-content:center;font-size:10px;color:rgba(255,255,255,0.3)">
+      <span>🟢 ≥3 = validé ⭐</span><span>🟠 2 séances</span></div></div>`;
+  }
+
+  h+=`<button style="width:100%;padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.4);font-size:12px;letter-spacing:2px;font-weight:700;cursor:pointer"
+    onclick="if(confirm('Réinitialiser la semaine ?')){progress={};saveP({});render()}">RÉINITIALISER LA SEMAINE</button>`;
+  document.getElementById("view-stats").innerHTML=h;
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+
+function render(){
+  if(curView==="home")    renderHome();
+  if(curView==="program") renderProgram();
+  if(curView==="calc")    renderCalc();
+  if(curView==="stats")   renderStats();
+}
+
+render();
+</script>
+</body>
+</html>
